@@ -6,13 +6,17 @@ use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use think\facade\Config;
+use AlibabaCloud\Client\AlibabaCloud;
+use AlibabaCloud\Client\Exception\ClientException;
+use AlibabaCloud\Client\Exception\ServerException;
 
 class Index extends BaseController
 {
     protected $middleware = [
-        'auth' => ['except' => [
-            'save'
-        ]
+        'auth' => [
+            'except' => [
+                'save'
+            ]
         ]
     ];
 
@@ -47,6 +51,65 @@ class Index extends BaseController
             'id' => $id,
             'token' => $token->__toString()
         ]);
+    }
+
+    public function captcha()
+    {
+        $error = null;
+        $phone = $this->request->post('phone');
+
+        if (preg_match('/(^1[\d]{10})/', $phone, $match))
+        {
+            try {
+                AlibabaCloud::accessKeyClient('<accessKeyId>', '<accessSecret>')
+                    ->regionId('cn-hangzhou')
+                    ->asDefaultClient();
+            } catch (ClientException $e) {
+                $error = $e->getErrorMessage() . PHP_EOL;
+            }
+
+            if (! $error)
+            {
+                try {
+                    $result = AlibabaCloud::rpc()
+                        ->product('Dysmsapi')
+                        // ->scheme('https') // https | http
+                        ->version('2017-05-25')
+                        ->action('SendSms')
+                        ->method('POST')
+                        ->host('dysmsapi.aliyuncs.com')
+                        ->options([
+                            'query' => [
+                                'RegionId' => "cn-hangzhou",
+                                'PhoneNumbers' => $match[1],
+                                'SignName' => "阿里云",
+                                'TemplateCode' => "SMS_153055065",
+                            ],
+                        ])
+                        ->request();
+
+                    $result = $result->toArray();
+
+                    if ($result['code'] = 'OK')
+                    {
+                        return $this->getResponse('发送成功');
+                    }else{
+                        $error = $result['message'];
+                    }
+                } catch (ClientException $e) {
+                    $error = $e->getErrorMessage() . PHP_EOL;
+                } catch (ServerException $e) {
+                    $error = $e->getErrorMessage() . PHP_EOL;
+                }
+            }
+        }
+
+        if ($error)
+        {
+            //TODO
+            //log处理
+            return $this->getResponse('发送失败,请稍后再试！');
+        }
     }
 
     public function time()

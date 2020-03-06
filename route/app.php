@@ -14,4 +14,5 @@ use think\facade\Route;
 
 Route::get('/', 'Index/index');
 Route::get('/time', 'Index/time');
-Route::post('users/:id', 'Index/save');
+Route::post('users', 'Index/save');
+Route::post('captcha', 'Index/captcha');
