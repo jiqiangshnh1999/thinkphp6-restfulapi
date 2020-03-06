@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * JWT RSA Keys
+ */
 return [
     'public_key' => <<<EOF
 -----BEGIN PUBLIC KEY-----

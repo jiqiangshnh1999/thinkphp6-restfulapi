@@ -29,7 +29,7 @@ class BearTokenCheck
     ];
 
     /**
-     * 注入Cache类
+     * 注入redis实列
      * BearTokenCheck constructor.
      * @param Cache $cache
      */
@@ -40,13 +40,9 @@ class BearTokenCheck
 
     /**
      * 处理请求
-     *
      * @param Request $request
      * @param Closure $next
      * @return Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
      */
     public function handle($request, Closure $next)
     {
@@ -66,6 +62,6 @@ class BearTokenCheck
             }
         }
 
-        return  json($this->responseData, 401);
+        return  json($this->responseData, config('code.TOKEN_ILLEGAL_CODE'));
     }
 }
